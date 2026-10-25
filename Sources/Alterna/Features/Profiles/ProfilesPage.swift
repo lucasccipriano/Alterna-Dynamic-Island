@@ -1,0 +1,138 @@
+import SwiftUI
+
+/// Página "Alternar": perfis de teclado, rolagem e velocidade, mais atalhos rápidos.
+struct ProfilesPage: View {
+    @ObservedObject private var store = ProfileStore.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if store.profiles.isEmpty {
+                IslandEmptyState(symbol: "switch.2", title: "Nenhum perfil",
+                                 message: "Crie perfis de trabalho e lazer nos Ajustes.",
+                                 buttonTitle: "Criar perfil") { SettingsOpener.open() }
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(store.profiles) { profile in
+                            ProfileCard(profile: profile, isActive: profile.id == store.activeProfileID) {
+                                store.apply(profile)
+                            }
+                        }
+                    }
+                }
+                .scrollDisabled(store.profiles.count <= 4)
+
+                QuickControls()
+            }
+        }
+        .onAppear { store.refreshStatus() }
+    }
+}
+
+private struct ProfileCard: View {
+    let profile: Profile
+    let isActive: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: profile.symbol)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(isActive ? Color.white : .white.opacity(0.9))
+                        .frame(width: 34, height: 34)
+                        .background(Circle().fill(isActive ? Color.accentColor : .white.opacity(0.12)))
+                    Spacer()
+                    if isActive {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
+                Text(profile.name.isEmpty ? "Sem nome" : profile.name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(profile.summary)
+                    .font(.system(size: 10))
+                    .foregroundStyle(IslandStyle.secondary)
+                    .lineLimit(2, reservesSpace: true)
+                Text(profile.shortcut?.display ?? " ")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(IslandStyle.tertiary)
+            }
+            .padding(12)
+            .frame(width: 132, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(hovering ? IslandStyle.cardHover : IslandStyle.card)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(isActive ? Color.accentColor.opacity(0.7) : .clear, lineWidth: 1.5)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .linkCursor()
+        .help("Aplicar \(profile.name)")
+    }
+}
+
+/// Ajustes avulsos, sem precisar de perfil.
+private struct QuickControls: View {
+    @ObservedObject private var store = ProfileStore.shared
+    @State private var natural = ScrollDirection.isNatural
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Menu {
+                ForEach(store.inputSources) { source in
+                    Button {
+                        InputSources.select(id: source.id)
+                        store.refreshStatus()
+                    } label: {
+                        if source.id == store.currentInputSource?.id {
+                            Label(source.name, systemImage: "checkmark")
+                        } else {
+                            Text(source.name)
+                        }
+                    }
+                }
+            } label: {
+                Label(store.currentInputSource?.name ?? "Teclado", systemImage: "keyboard")
+                    .font(.system(size: 12, weight: .medium))
+                    .lineLimit(1)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.visible)
+            .fixedSize()
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(Capsule().fill(IslandStyle.card))
+
+            Toggle(isOn: Binding(get: { natural }, set: {
+                natural = $0
+                ScrollDirection.setNatural($0)
+            })) {
+                Text("Rolagem natural").font(.system(size: 12, weight: .medium)).foregroundStyle(.white)
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background(Capsule().fill(IslandStyle.card))
+
+            Toggle(isOn: Binding(get: { store.reverseMouseWheel }, set: { store.setReverseMouseWheel($0) })) {
+                Text("Inverter mouse").font(.system(size: 12, weight: .medium)).foregroundStyle(.white)
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background(Capsule().fill(IslandStyle.card))
+            .help("Inverte só a roda do mouse, sem mexer no trackpad")
+
+            Spacer(minLength: 0)
+        }
+    }
+}
