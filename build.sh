@@ -53,7 +53,17 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Alterna"
 cp Support/Info.plist "$APP/Contents/Info.plist"
-cp Support/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+make_icon() {
+    # Gera o .icns com as ferramentas da Apple (sips + iconutil) a partir do PNG 1024.
+    local set="build/AppIcon.iconset"
+    rm -rf "$set"; mkdir -p "$set"
+    for s in 16 32 128 256 512; do
+        sips -z $s $s Support/AppIcon-1024.png --out "$set/icon_${s}x${s}.png" >/dev/null
+        sips -z $((s*2)) $((s*2)) Support/AppIcon-1024.png --out "$set/icon_${s}x${s}@2x.png" >/dev/null
+    done
+    iconutil -c icns "$set" -o "$APP/Contents/Resources/AppIcon.icns" && rm -rf "$set"
+}
+make_icon || cp Support/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
 echo "› Assinando…"
 ensure_identity
@@ -74,6 +84,10 @@ pkill -x Alterna 2>/dev/null || true
 sleep 0.5
 rm -rf /Applications/Alterna.app
 cp -R "$APP" /Applications/Alterna.app
+# Faz o Finder e o Dock lerem o ícone novo.
+touch /Applications/Alterna.app
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Alterna.app 2>/dev/null || true
+killall Dock 2>/dev/null || true
 open /Applications/Alterna.app
 
 echo ""
