@@ -1,0 +1,33 @@
+<!doctype html><html><body style="margin:0;background:transparent">
+<svg id="i" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0" stop-color="#3a7bd5"/><stop offset=".55" stop-color="#1f4fa8"/><stop offset="1" stop-color="#0f2a63"/></linearGradient>
+  <radialGradient id="glow" cx=".5" cy=".18" r=".7"><stop offset="0" stop-color="#8fd3ff" stop-opacity=".55"/><stop offset="1" stop-color="#8fd3ff" stop-opacity="0"/></radialGradient>
+  <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd0c8" stop-opacity="0"/><stop offset="1" stop-color="#4fc3c0" stop-opacity=".35"/></linearGradient>
+  <linearGradient id="art" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6a5c"/><stop offset=".5" stop-color="#ffb347"/><stop offset="1" stop-color="#5ed6c7"/></linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <clipPath id="body"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath>
+  <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity=".32"/></filter>
+  <filter id="ish" x="-20%" y="-40%" width="140%" height="200%"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".45"/></filter>
+</defs>
+<g filter="url(#sh)"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/></g>
+<g clip-path="url(#body)">
+  <rect x="100" y="100" width="824" height="824" fill="url(#glow)"/>
+  <!-- montanhas e lago, lembrando o papel de parede -->
+  <path d="M100 700 L250 600 L330 640 L450 540 L560 620 L650 570 L780 650 L924 590 L924 924 L100 924 Z" fill="#163b80" opacity=".75"/>
+  <path d="M100 760 L260 690 L400 730 L540 670 L700 730 L924 680 L924 924 L100 924 Z" fill="#0d2759" opacity=".85"/>
+  <rect x="100" y="700" width="824" height="224" fill="url(#lake)"/>
+  <rect x="100" y="100" width="824" height="824" fill="url(#sheen)"/>
+  <!-- ilha presa ao topo, com as abas côncavas -->
+  <g filter="url(#ish)">
+    <path d="M222 100 Q262 100 262 140 L262 238 Q262 296 320 296 L704 296 Q762 296 762 238 L762 140 Q762 100 802 100 Z" fill="#000"/>
+  </g>
+  <rect x="306" y="168" width="96" height="96" rx="24" fill="url(#art)"/>
+  <g fill="#ffb35c">
+    <rect x="626" y="196" width="14" height="40" rx="7"/><rect x="650" y="178" width="14" height="76" rx="7"/>
+    <rect x="674" y="200" width="14" height="32" rx="7"/><rect x="698" y="186" width="14" height="60" rx="7"/>
+  </g>
+</g>
+<rect x="100.5" y="100.5" width="823" height="823" rx="184.5" fill="none" stroke="#fff" stroke-opacity=".18"/>
+</svg></body></html>

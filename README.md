@@ -1,3 +1,5 @@
+<p align="center"><img src="Support/AppIcon-1024.png" width="160" alt="Ícone do Alterna"></p>
+
 # Alterna – Dynamic Island
 
 A Dynamic Island do iPhone, agora no notch do seu MacBook. Feita em **Swift + SwiftUI** e seguindo as **Human Interface Guidelines** da Apple.
