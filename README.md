@@ -132,7 +132,7 @@ A **⚙︎ engrenagem** na ponta direita abre os **Ajustes**. Com o botão direi
 **Como ativar:** abra o Spotify e passe o mouse no notch. A prévia mostra a música atual. Clique para abrir a seção **Música**.
 
 - **Tocando agora:** capa, faixa e artista; barra de progresso que você pode arrastar; anterior, tocar/pausar e próxima; aleatório; repetir; e volume (a barra vertical).
-- **Playlists:** suas playlists em grade. Clique para tocar.
+- **Playlists:** **Músicas Curtidas** em primeiro lugar e depois suas playlists, em grade. Clique para tocar.
 - **Buscar:** músicas, artistas, álbuns e playlists. Clique para tocar.
 - **Na ilha fechada:** enquanto toca, aparecem a capa e um equalizador ao lado do notch.
 
@@ -187,6 +187,7 @@ Exemplos de comandos:
 | "Alt, pesquisar relatório" | Procura nos seus arquivos (Spotlight) |
 | "Alt, pesquisar na internet clima em Lisboa" | Pesquisa no Google |
 | "Alt, tocar Coldplay" / "pausar" / "próxima música" | Controla o Spotify |
+| "Alt, tocar músicas curtidas" | Toca suas Músicas Curtidas |
 | "Alt, bateria" / "armazenamento" / "memória" / "versão do macOS" / "que horas são" | Informações do Mac |
 
 **Para desligar o microfone**, clique no **botão de microfone laranja** na prévia ou na seção Comando, ou desligue em **Ajustes › Comando de voz › Ativação por voz**.

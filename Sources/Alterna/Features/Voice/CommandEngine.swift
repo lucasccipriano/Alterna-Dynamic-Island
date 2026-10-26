@@ -182,6 +182,15 @@ enum CommandEngine {
             else if !spotify.isPlaying { spotify.playPause() }
             return .music(title: "Tocando", detail: spotify.track?.name ?? "Spotify")
         }
+        let liked = ["musicas curtidas", "curtidas", "minhas curtidas", "liked songs", "favoritas", "minhas favoritas",
+                     "musicas favoritas", "as curtidas", "as musicas curtidas"]
+        if liked.contains(fold(query)) {
+            if SpotifyAPI.shared.isConnected && SpotifyAPI.shared.likedCollectionURI == nil {
+                await SpotifyAPI.shared.loadLiked()
+            }
+            spotify.playLikedSongs()
+            return .music(title: "Tocando Músicas Curtidas", detail: "")
+        }
         let api = SpotifyAPI.shared
         if api.isConnected, let first = await api.search(query).first {
             spotify.play(uri: first.uri)

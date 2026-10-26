@@ -150,6 +150,25 @@ final class SpotifyController: ObservableObject {
         }
     }
 
+    /// Toca as Músicas Curtidas (Liked Songs) a partir da primeira faixa.
+    func playLikedSongs() {
+        let api = SpotifyAPI.shared
+        guard let collection = api.likedCollectionURI else {
+            // Sem login na Web API: abre a coleção no próprio Spotify.
+            NSWorkspace.shared.open(URL(string: "spotify:collection:tracks")!)
+            return
+        }
+        if !isRunning {
+            NSWorkspace.shared.open(URL(string: "spotify:collection:tracks")!)
+            return
+        }
+        if let first = api.firstLikedURI {
+            play(uri: first, inContext: collection)
+        } else {
+            play(uri: collection)
+        }
+    }
+
     func openApp() {
         AppInfo.open(Self.bundleID)
     }

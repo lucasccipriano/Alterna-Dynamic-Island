@@ -209,6 +209,7 @@ private struct PlaylistsView: View {
         } else {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 88, maximum: 110), spacing: 12)], spacing: 12) {
+                    LikedSongsTile()
                     ForEach(api.playlists) { item in
                         PlaylistTile(item: item) { spotify.play(uri: item.uri) }
                     }
@@ -247,6 +248,48 @@ private struct PlaylistTile: View {
         .linkCursor()
         .onTapGesture(perform: action)
         .help("Tocar \(item.name)")
+    }
+}
+
+/// "Músicas Curtidas": primeiro item da grade, com o visual de gradiente e coração.
+private struct LikedSongsTile: View {
+    @ObservedObject private var api = SpotifyAPI.shared
+    @ObservedObject private var spotify = SpotifyController.shared
+    @State private var hovering = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(LinearGradient(colors: [Color(red: 0.27, green: 0.13, blue: 0.85),
+                                                  Color(red: 0.55, green: 0.75, blue: 0.95)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+                Image(systemName: hovering ? "play.circle.fill" : "heart.fill")
+                    .font(.system(size: hovering ? 30 : 28, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .shadow(radius: hovering ? 6 : 0)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+            .frame(width: 88, height: 88)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Músicas Curtidas")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                if let count = api.likedCount {
+                    Text(count == 1 ? "1 música" : "\(count) músicas")
+                        .font(.system(size: 10))
+                        .foregroundStyle(IslandStyle.tertiary)
+                }
+            }
+            .frame(width: 88, alignment: .leading)
+        }
+        .contentShape(Rectangle())
+        .onHover { h in withAnimation(.easeOut(duration: 0.15)) { hovering = h } }
+        .linkCursor()
+        .onTapGesture { spotify.playLikedSongs() }
+        .help("Tocar Músicas Curtidas")
+        .task { if api.likedCount == nil { await api.loadLiked() } }
     }
 }
 

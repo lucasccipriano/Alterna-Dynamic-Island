@@ -32,6 +32,10 @@ final class SpotifyAPI: ObservableObject {
     @Published private(set) var isConnecting = false
     @Published private(set) var userName: String?
     @Published private(set) var playlists: [SpotifyItem] = []
+    /// Músicas Curtidas (Liked Songs): total e a primeira faixa (para tocar a coleção).
+    @Published private(set) var likedCount: Int?
+    private(set) var firstLikedURI: String?
+    private(set) var userID: String?
     @Published private(set) var isLoadingPlaylists = false
     @Published private(set) var errorMessage: String?
 
@@ -123,9 +127,26 @@ final class SpotifyAPI: ObservableObject {
                                      as: Page<APIPlaylist>.self)
             playlists = page.items.compactMap { $0?.item }
             errorMessage = nil
+            await loadLiked()
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Músicas Curtidas: quantas são e qual é a primeira.
+    func loadLiked() async {
+        guard isConnected else { return }
+        if userID == nil { await loadProfile() }
+        if let page = try? await get("/me/tracks", query: [URLQueryItem(name: "limit", value: "1")],
+                                     as: LikedPage.self) {
+            likedCount = page.total
+            firstLikedURI = page.items.first??.track?.uri
+        }
+    }
+
+    /// Endereço da coleção "Músicas Curtidas" no Spotify.
+    var likedCollectionURI: String? {
+        userID.map { "spotify:user:\($0):collection" }
     }
 
     func search(_ text: String) async -> [SpotifyItem] {
@@ -154,6 +175,7 @@ final class SpotifyAPI: ObservableObject {
         guard isConnected else { return }
         if let me = try? await get("/me", as: Me.self) {
             userName = me.display_name
+            userID = me.id
         }
     }
 
@@ -329,7 +351,16 @@ private struct TokenResponse: Decodable {
     let refresh_token: String?
 }
 
-private struct Me: Decodable { let display_name: String? }
+private struct Me: Decodable {
+    let id: String?
+    let display_name: String?
+}
+
+private struct LikedPage: Decodable {
+    struct Item: Decodable { let track: APITrack? }
+    let total: Int
+    let items: [Item?]
+}
 
 private struct APIImage: Decodable { let url: String }
 
