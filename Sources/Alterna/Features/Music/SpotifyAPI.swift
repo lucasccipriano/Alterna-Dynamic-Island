@@ -6,7 +6,7 @@ import Security
 
 /// Resultado de playlist ou busca no Spotify.
 struct SpotifyItem: Identifiable, Hashable {
-    enum Kind: String { case track, playlist, album, artist }
+    enum Kind: String { case track, playlist, album, artist, show, episode }
     var id: String { uri }
     let uri: String
     let name: String
@@ -149,22 +149,53 @@ final class SpotifyAPI: ObservableObject {
         userID.map { "spotify:user:\($0):collection" }
     }
 
-    func search(_ text: String) async -> [SpotifyItem] {
+    /// O que a busca procura.
+    enum SearchScope: String, CaseIterable, Identifiable {
+        case all, music, podcasts
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .all: "Tudo"
+            case .music: "Músicas"
+            case .podcasts: "Podcasts"
+            }
+        }
+        var types: String {
+            switch self {
+            case .all: "track,artist,album,playlist,show,episode"
+            case .music: "track,artist,album,playlist"
+            case .podcasts: "show,episode"
+            }
+        }
+    }
+
+    func search(_ text: String, scope: SearchScope = .all) async -> [SpotifyItem] {
         let q = text.trimmingCharacters(in: .whitespaces)
         guard isConnected, !q.isEmpty else { return [] }
         do {
             let result = try await get("/search", query: [
                 URLQueryItem(name: "q", value: q),
-                URLQueryItem(name: "type", value: "track,artist,album,playlist"),
-                URLQueryItem(name: "limit", value: "6")
+                URLQueryItem(name: "type", value: scope.types),
+                // Sem o mercado do usuário, o Spotify devolve os episódios vazios.
+                URLQueryItem(name: "market", value: "from_token"),
+                URLQueryItem(name: "limit", value: scope == .podcasts ? "8" : "6")
             ], as: SearchResponse.self)
             errorMessage = nil
-            var items: [SpotifyItem] = []
-            items += (result.tracks?.items ?? []).compactMap { $0?.item }
-            items += (result.artists?.items ?? []).compactMap { $0?.item }.prefix(3)
-            items += (result.albums?.items ?? []).compactMap { $0?.item }.prefix(4)
-            items += (result.playlists?.items ?? []).compactMap { $0?.item }.prefix(4)
-            return items
+            let tracks = (result.tracks?.items ?? []).compactMap { $0?.item }
+            let artists = (result.artists?.items ?? []).compactMap { $0?.item }
+            let albums = (result.albums?.items ?? []).compactMap { $0?.item }
+            let playlists = (result.playlists?.items ?? []).compactMap { $0?.item }
+            let shows = (result.shows?.items ?? []).compactMap { $0?.item }
+            let episodes = (result.episodes?.items ?? []).compactMap { $0?.item }
+            switch scope {
+            case .podcasts:
+                return Array(shows.prefix(4)) + Array(episodes.prefix(8))
+            case .music:
+                return tracks + artists.prefix(3) + albums.prefix(4) + playlists.prefix(4)
+            case .all:
+                return tracks + shows.prefix(3) + episodes.prefix(3) + artists.prefix(3)
+                    + albums.prefix(4) + playlists.prefix(4)
+            }
         } catch {
             errorMessage = error.localizedDescription
             return []
@@ -420,11 +451,56 @@ private struct APIPlaylist: Decodable {
     }
 }
 
+private struct APIShow: Decodable {
+    let name: String
+    let uri: String?
+    let publisher: String?
+    let images: [APIImage]?
+
+    var item: SpotifyItem? {
+        guard let uri else { return nil }
+        let by = publisher.map { "Podcast · \($0)" } ?? "Podcast"
+        return SpotifyItem(uri: uri, name: name, subtitle: by,
+                           imageURL: images?.last.flatMap { URL(string: $0.url) }, kind: .show)
+    }
+}
+
+private struct APIEpisode: Decodable {
+    let name: String
+    let uri: String?
+    let images: [APIImage]?
+    let release_date: String?
+    let duration_ms: Int?
+
+    var item: SpotifyItem? {
+        guard let uri else { return nil }
+        var parts = ["Episódio"]
+        if let date = release_date.flatMap(Self.formatDate) { parts.append(date) }
+        if let ms = duration_ms, ms > 0 { parts.append("\(max(1, ms / 60_000)) min") }
+        return SpotifyItem(uri: uri, name: name, subtitle: parts.joined(separator: " · "),
+                           imageURL: images?.last.flatMap { URL(string: $0.url) }, kind: .episode)
+    }
+
+    private static func formatDate(_ text: String) -> String? {
+        let input = DateFormatter()
+        input.locale = Locale(identifier: "en_US_POSIX")
+        input.dateFormat = "yyyy-MM-dd"
+        guard let date = input.date(from: text) else { return nil }
+        let output = DateFormatter()
+        output.locale = Locale(identifier: "pt_BR")
+        output.setLocalizedDateFormatFromTemplate(
+            Calendar.current.isDate(date, equalTo: Date(), toGranularity: .year) ? "d MMM" : "d MMM yyyy")
+        return output.string(from: date)
+    }
+}
+
 private struct SearchResponse: Decodable {
     let tracks: Page<APITrack>?
     let artists: Page<APIArtist>?
     let albums: Page<APIAlbum>?
     let playlists: Page<APIPlaylist>?
+    let shows: Page<APIShow>?
+    let episodes: Page<APIEpisode>?
 }
 
 // MARK: - Utilidades

@@ -192,7 +192,16 @@ enum CommandEngine {
             return .music(title: "Tocando Músicas Curtidas", detail: "")
         }
         let api = SpotifyAPI.shared
-        if api.isConnected, let first = await api.search(query).first {
+        // "tocar o podcast X" / "tocar episódio X" busca só em podcasts.
+        var query = query
+        var scope: SpotifyAPI.SearchScope = .all
+        for prefix in ["o podcast ", "podcast ", "o episodio ", "episodio ", "o episódio ", "episódio "]
+        where query.lowercased().hasPrefix(prefix) {
+            query = String(query.dropFirst(prefix.count))
+            scope = .podcasts
+            break
+        }
+        if api.isConnected, let first = await api.search(query, scope: scope).first {
             spotify.play(uri: first.uri)
             return .music(title: "Tocando \(first.name)", detail: first.subtitle)
         }

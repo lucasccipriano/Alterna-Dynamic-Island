@@ -302,16 +302,25 @@ private struct MusicSearchView: View {
     @State private var results: [SpotifyItem] = []
     @State private var searching = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var scope: SpotifyAPI.SearchScope = .all
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            IslandSearchField(prompt: api.isConnected ? "Músicas, artistas, álbuns ou playlists"
-                                                      : "Buscar no Spotify",
-                              text: $query) {
-                if api.isConnected { runSearch(delay: 0) } else { spotify.openSearch(query) }
+            HStack(spacing: 8) {
+                IslandSearchField(prompt: api.isConnected ? Self.prompt(scope) : "Buscar no Spotify",
+                                  text: $query) {
+                    if api.isConnected { runSearch(delay: 0) } else { spotify.openSearch(query) }
+                }
+                if api.isConnected {
+                    ScopePicker(scope: $scope)
+                }
             }
             .onChange(of: query) { _, _ in
                 if api.isConnected { runSearch(delay: 0.35) }
+            }
+            .onChange(of: scope) { _, _ in
+                results = []
+                if api.isConnected { runSearch(delay: 0) }
             }
 
             if !api.isConnected {
@@ -332,7 +341,7 @@ private struct MusicSearchView: View {
                             HoverRow(action: { spotify.play(uri: item.uri) }) {
                                 HStack(spacing: 10) {
                                     RemoteImage(url: item.imageURL, size: 34,
-                                                radius: item.kind == .artist ? 17 : 6)
+                                                radius: item.kind == .artist ? 17 : (item.kind == .show || item.kind == .episode ? 8 : 6))
                                     VStack(alignment: .leading, spacing: 1) {
                                         Text(item.name)
                                             .font(.system(size: 12, weight: .medium))
@@ -364,7 +373,7 @@ private struct MusicSearchView: View {
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
             guard !Task.isCancelled else { return }
             searching = true
-            let found = await api.search(text)
+            let found = await api.search(text, scope: scope)
             guard !Task.isCancelled else { return }
             results = found
             searching = false
@@ -377,7 +386,51 @@ private struct MusicSearchView: View {
         case .artist: "music.mic"
         case .album: "square.stack"
         case .playlist: "music.note.list"
+        case .show: "mic.fill"
+        case .episode: "play.circle"
         }
+    }
+
+    private static func prompt(_ scope: SpotifyAPI.SearchScope) -> String {
+        switch scope {
+        case .all: "Músicas, artistas, álbuns, playlists ou podcasts"
+        case .music: "Músicas, artistas, álbuns ou playlists"
+        case .podcasts: "Podcasts ou episódios"
+        }
+    }
+}
+
+/// Filtro da busca: Tudo, Músicas ou Podcasts.
+private struct ScopePicker: View {
+    @Binding var scope: SpotifyAPI.SearchScope
+    @Namespace private var ns
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(SpotifyAPI.SearchScope.allCases) { item in
+                let active = item == scope
+                Button {
+                    withAnimation(.island) { scope = item }
+                } label: {
+                    Text(item.title)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(active ? Color.black : IslandStyle.secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background {
+                            if active {
+                                Capsule().fill(.white).matchedGeometryEffect(id: "scope", in: ns)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .linkCursor(!active)
+            }
+        }
+        .padding(2)
+        .background(Capsule().fill(IslandStyle.card))
+        .fixedSize()
     }
 }
 
