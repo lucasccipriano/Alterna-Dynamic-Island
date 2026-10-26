@@ -6,7 +6,9 @@ struct ProfilesPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if store.profiles.isEmpty {
+            if !store.profilesEnabled {
+                ProfilesDisabledView()
+            } else if store.profiles.isEmpty {
                 IslandEmptyState(symbol: "switch.2", title: "Nenhum perfil",
                                  message: "Crie perfis de trabalho e lazer nos Ajustes.",
                                  buttonTitle: "Criar perfil") { SettingsOpener.open() }
@@ -134,5 +136,41 @@ private struct QuickControls: View {
 
             Spacer(minLength: 0)
         }
+    }
+}
+
+/// Estado da página quando os perfis estão desligados nos Ajustes:
+/// explica o que a função faz e oferece um switch para ligar ali mesmo.
+struct ProfilesDisabledView: View {
+    @ObservedObject private var store = ProfileStore.shared
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "keyboard")
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(IslandStyle.secondary)
+            Text("Perfis de teclado desligados")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+            Text("Ligue para trocar idioma do teclado, rolagem e velocidade do mouse com um clique ou atalho.")
+                .font(.system(size: 12))
+                .foregroundStyle(IslandStyle.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 380)
+            Toggle(isOn: Binding(get: { store.profilesEnabled },
+                                 set: { on in withAnimation(.island) { store.profilesEnabled = on } })) {
+                Text("Perfis de teclado")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .padding(.horizontal, 12).padding(.vertical, 5)
+            .background(Capsule().fill(IslandStyle.card))
+            .fixedSize()
+            .linkCursor()
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

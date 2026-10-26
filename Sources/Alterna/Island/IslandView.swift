@@ -545,7 +545,27 @@ private struct PreviewGlance: View {
     }
 
     // Alternar
+    @ViewBuilder
     private var profiles: some View {
+        if !store.profilesEnabled {
+            HStack(spacing: 12) {
+                badge("keyboard", .gray)
+                titles("Perfis de teclado desligados", "Ligue para trocar de perfil")
+                Spacer(minLength: 8)
+                Toggle("", isOn: Binding(get: { store.profilesEnabled },
+                                         set: { on in withAnimation(.island) { store.profilesEnabled = on } }))
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .labelsHidden()
+                    .linkCursor()
+                    .help("Ligar perfis de teclado")
+            }
+        } else {
+            profilesGlance
+        }
+    }
+
+    private var profilesGlance: some View {
         HStack(spacing: 12) {
             badge(store.activeProfile?.symbol ?? "switch.2", .accentColor)
             titles(store.activeProfile?.name ?? "Nenhum perfil ativo",

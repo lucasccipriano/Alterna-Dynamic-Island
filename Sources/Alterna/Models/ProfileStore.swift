@@ -23,6 +23,15 @@ final class ProfileStore: ObservableObject {
         didSet { persist(); registerHotKeys() }
     }
 
+    /// Liga ou desliga toda a função de perfis (página Alternar e atalhos dos perfis).
+    @Published var profilesEnabled: Bool {
+        didSet {
+            guard profilesEnabled != oldValue else { return }
+            defaults.set(profilesEnabled, forKey: Keys.enabled)
+            registerHotKeys()
+        }
+    }
+
     @Published var showHUD: Bool {
         didSet { defaults.set(showHUD, forKey: Keys.hud) }
     }
@@ -41,6 +50,7 @@ final class ProfileStore: ObservableObject {
         static let active = "activeProfile"
         static let cycle = "cycleShortcut"
         static let hud = "showHUD"
+        static let enabled = "profiles.enabled"
         static let reverse = "reverseMouseWheel"
     }
 
@@ -64,6 +74,7 @@ final class ProfileStore: ObservableObject {
 
         activeProfileID = defaults.string(forKey: Keys.active).flatMap { UUID(uuidString: $0) }
         showHUD = defaults.object(forKey: Keys.hud) as? Bool ?? true
+        profilesEnabled = defaults.object(forKey: Keys.enabled) as? Bool ?? true
         reverseMouseWheel = defaults.bool(forKey: Keys.reverse)
 
         refreshStatus()
@@ -230,6 +241,8 @@ final class ProfileStore: ObservableObject {
 
     private func registerHotKeys() {
         var bindings: [(Shortcut, () -> Void)] = []
+        // Desligado: nenhum atalho de perfil fica registrado.
+        guard profilesEnabled else { HotKeyCenter.shared.setBindings(bindings); return }
         for profile in profiles {
             guard let shortcut = profile.shortcut else { continue }
             let id = profile.id

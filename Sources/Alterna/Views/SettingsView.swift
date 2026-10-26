@@ -21,11 +21,12 @@ struct SettingsView: View {
                     Label("Comando de voz", systemImage: "waveform").tag(SidebarItem.voice)
                 }
 
-                Section("Perfis") {
+                Section(store.profilesEnabled ? "Perfis" : "Perfis (desligados)") {
                     ForEach(store.profiles) { profile in
                         Label(profile.name.isEmpty ? "Sem nome" : profile.name,
                               systemImage: profile.symbol)
                             .tag(SidebarItem.profile(profile.id))
+                            .foregroundStyle(store.profilesEnabled ? .primary : .secondary)
                     }
                     .onMove { store.profiles.move(fromOffsets: $0, toOffset: $1) }
                 }
@@ -152,15 +153,23 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Toggle("Abrir ao iniciar sessão", isOn: $store.launchAtLogin)
-                Toggle("Mostrar aviso ao trocar de perfil", isOn: $store.showHUD)
-                LabeledContent("Ir para o próximo perfil") {
-                    ShortcutRecorder(shortcut: $store.cycleShortcut)
+                Toggle("Perfis de teclado", isOn: $store.profilesEnabled)
+                if store.profilesEnabled {
+                    Toggle("Mostrar aviso ao trocar de perfil", isOn: $store.showHUD)
+                    LabeledContent("Ir para o próximo perfil") {
+                        ShortcutRecorder(shortcut: $store.cycleShortcut)
+                    }
                 }
             } header: {
                 Text("Alternar")
             } footer: {
-                Text("O atalho de cada perfil fica na página dele, na barra lateral.")
+                Text(store.profilesEnabled
+                     ? "O atalho de cada perfil fica na página dele, na barra lateral."
+                     : "Desligado: a seção Alternar da ilha mostra um aviso com um switch para ligar de novo, e os atalhos dos perfis ficam livres.")
+            }
+
+            Section {
+                Toggle("Abrir ao iniciar sessão", isOn: $store.launchAtLogin)
             }
 
             Section {

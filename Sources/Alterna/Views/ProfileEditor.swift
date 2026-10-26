@@ -7,6 +7,14 @@ struct ProfileEditor: View {
 
     var body: some View {
         Form {
+            if !store.profilesEnabled {
+                Section {
+                    Toggle(isOn: $store.profilesEnabled) {
+                        Text("Perfis de teclado desligados")
+                        Text("Os atalhos e a seção Alternar da ilha só funcionam com os perfis ligados.")
+                    }
+                }
+            }
             Section {
                 HStack(spacing: 14) {
                     SymbolPicker(symbol: $profile.symbol)
