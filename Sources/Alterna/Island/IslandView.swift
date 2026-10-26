@@ -51,7 +51,11 @@ struct IslandRootView: View {
                             right: { Image(systemName: "waveform").foregroundStyle(.white) })
                 .transition(.islandContent)
         } else if model.showsMusicActivity {
-            CompactActivity(left: { ArtworkView(image: spotify.artwork, size: 22, radius: 6) },
+            CompactActivity(left: {
+                // Capa com folga em cima e embaixo (4 pt de cada lado), sem encostar nas bordas da ilha.
+                let art = max(14, model.geometry.height - 8)
+                ArtworkView(image: spotify.artwork, size: art, radius: art * 0.26)
+            },
                             right: { EqualizerBars(isPlaying: spotify.isPlaying, color: spotify.accent) })
                 .transition(.islandContent)
         } else {
