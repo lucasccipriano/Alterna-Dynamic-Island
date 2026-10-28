@@ -1,4 +1,6 @@
+import Accelerate
 import AVFoundation
+import IOKit
 import AudioToolbox
 import CoreAudio
 
@@ -12,7 +14,7 @@ enum AudioInput {
     /// de áudio antigo depois que um fone conecta ou desconecta (isso fechava o app).
     static func makeEngine(preferBuiltIn: Bool = true) -> AVAudioEngine {
         let engine = AVAudioEngine()
-        if preferBuiltIn, var device = builtInMicrophone(), let unit = engine.inputNode.audioUnit {
+        if var device = chosenDevice(preferBuiltIn: preferBuiltIn), let unit = engine.inputNode.audioUnit {
             AudioUnitSetProperty(unit,
                                  kAudioOutputUnitProperty_CurrentDevice,
                                  kAudioUnitScope_Global,
@@ -37,6 +39,65 @@ enum AudioInput {
         let hardware = engine.inputNode.inputFormat(forBus: 0)
         guard hardware.sampleRate > 0, hardware.channelCount > 0 else { return nil }
         return hardware
+    }
+
+    /// Microfone escolhido em Ajustes › Comando de voz: "auto", "default" ou o UID de um aparelho.
+    static var setting: String { UserDefaults.standard.string(forKey: "voice.microphone") ?? "auto" }
+
+    /// Aparelho a usar. nil = microfone padrão do sistema.
+    /// No automático, usa o microfone do Mac, menos com a tampa fechada (aí ele só entrega silêncio).
+    static func chosenDevice(preferBuiltIn: Bool) -> AudioDeviceID? {
+        switch setting {
+        case "default": return nil
+        case "auto": return preferBuiltIn && !isLidClosed ? builtInMicrophone() : nil
+        default: return inputDevices().first { $0.uid == setting }?.id
+        }
+    }
+
+    /// Nome do microfone que a sessão vai usar (para o diagnóstico).
+    static func describeChoice(preferBuiltIn: Bool) -> String {
+        if let id = chosenDevice(preferBuiltIn: preferBuiltIn) {
+            return inputDevices().first { $0.id == id }?.name ?? "Microfone do Mac"
+        }
+        let defaultID = CA.get(CA.system, CA.address(kAudioHardwarePropertyDefaultInputDevice), default: AudioDeviceID(0))
+        let name = inputDevices().first { $0.id == defaultID }?.name
+        return "Padrão do sistema" + (name.map { " (\($0))" } ?? "")
+    }
+
+    /// MacBook com a tampa fechada (usando monitor externo).
+    static var isLidClosed: Bool {
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPMrootDomain"))
+        guard service != 0 else { return false }
+        defer { IOObjectRelease(service) }
+        let value = IORegistryEntryCreateCFProperty(service, "AppleClamshellState" as CFString, kCFAllocatorDefault, 0)?
+            .takeRetainedValue()
+        return (value as? Bool) ?? false
+    }
+
+    struct Device: Identifiable, Hashable {
+        let id: AudioDeviceID
+        let uid: String
+        let name: String
+    }
+
+    /// Microfones disponíveis.
+    static func inputDevices() -> [Device] {
+        CA.array(CA.system, CA.address(kAudioHardwarePropertyDevices), of: AudioDeviceID.self).compactMap { id in
+            let streams = CA.array(id, CA.address(kAudioDevicePropertyStreams, kAudioObjectPropertyScopeInput),
+                                   of: AudioStreamID.self)
+            guard !streams.isEmpty, let uid = CA.string(id, CA.address(kAudioDevicePropertyDeviceUID)),
+                  !uid.hasPrefix("app.alterna."), !uid.hasPrefix("CADefaultDeviceAggregate") else { return nil }
+            let name = CA.string(id, CA.address(kAudioObjectPropertyName)) ?? uid
+            return Device(id: id, uid: uid, name: name)
+        }
+    }
+
+    /// Maior amplitude do trecho (0 = silêncio digital, típico de microfone desligado).
+    static func peak(_ buffer: AVAudioPCMBuffer) -> Float {
+        guard let data = buffer.floatChannelData, buffer.frameLength > 0 else { return 0 }
+        var value: Float = 0
+        vDSP_maxmgv(data[0], 1, &value, vDSP_Length(buffer.frameLength))
+        return value
     }
 
     static func builtInMicrophone() -> AudioDeviceID? {
@@ -73,4 +134,14 @@ enum AudioInput {
 /// Marca se o microfone já entregou áudio nesta sessão (escrito na thread de áudio).
 final class AudioFlag: @unchecked Sendable {
     var received = false
+    /// Maior amplitude ouvida. Fica em 0 quando o microfone só entrega silêncio.
+    var peak: Float = 0
+
+    func note(_ buffer: AVAudioPCMBuffer) {
+        received = true
+        if peak < 1e-5 { peak = max(peak, AudioInput.peak(buffer)) }
+    }
+
+    /// Recebeu áudio, mas só silêncio digital (ex.: microfone do MacBook com a tampa fechada).
+    var onlySilence: Bool { received && peak < 1e-6 }
 }

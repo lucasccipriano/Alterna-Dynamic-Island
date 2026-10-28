@@ -87,7 +87,7 @@ final class VoiceController: ObservableObject {
         let flag = AudioFlag()
         input.installTap(onBus: 0, bufferSize: 1024, format: AudioInput.tapFormat(engine)) { [weak request] buffer, _ in
             request?.append(buffer)
-            flag.received = true
+            flag.note(buffer)
             let level = Self.rms(buffer)
             DispatchQueue.main.async {
                 MainActor.assumeIsolated { VoiceController.shared.level = level }
@@ -115,14 +115,16 @@ final class VoiceController: ObservableObject {
 
         // Microfone embutido sem áudio: tenta de novo com o microfone padrão.
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            guard let self, self.isListening, !flag.received else { return }
-            if self.preferBuiltIn {
+            guard let self, self.isListening, !flag.received || flag.onlySilence else { return }
+            if self.preferBuiltIn && AudioInput.setting == "auto" {
                 self.preferBuiltIn = false
                 self.stopAudio()
                 self.startListening()
             } else {
                 self.stopAudio()
-                self.errorMessage = "O microfone não está entregando áudio. Confira a permissão de Microfone."
+                self.errorMessage = flag.onlySilence
+                    ? "O microfone escolhido só está entregando silêncio. Escolha outro em Ajustes › Comando de voz › Microfone."
+                    : "O microfone não está entregando áudio. Confira a permissão de Microfone."
             }
         }
         restartSilenceTimer(after: 6) // tempo para começar a falar

@@ -28,6 +28,9 @@ final class WakeWordListener: ObservableObject {
     @Published private(set) var lastHeard = ""
     @Published private(set) var audioReceived = false
     @Published private(set) var usingBuiltInMic = true
+    @Published private(set) var microphoneName = ""
+    /// O microfone entregou só silêncio (tampa fechada, microfone mudo…).
+    @Published private(set) var silentMicrophone = false
     @Published private(set) var onDevice = false
     @Published private(set) var lastRecognitionError: String?
 
@@ -135,7 +138,8 @@ final class WakeWordListener: ObservableObject {
         self.request = request
 
         engine = AudioInput.makeEngine(preferBuiltIn: preferBuiltIn)
-        usingBuiltInMic = preferBuiltIn && AudioInput.builtInMicrophone() != nil
+        usingBuiltInMic = AudioInput.chosenDevice(preferBuiltIn: preferBuiltIn) != nil
+        microphoneName = AudioInput.describeChoice(preferBuiltIn: preferBuiltIn)
         guard AudioInput.isUsable(engine) else {
             errorMessage = "Nenhum microfone encontrado."
             state = .paused
@@ -147,7 +151,7 @@ final class WakeWordListener: ObservableObject {
         let flag = AudioFlag()
         input.installTap(onBus: 0, bufferSize: 1024, format: AudioInput.tapFormat(engine)) { [weak request] buffer, _ in
             request?.append(buffer)
-            flag.received = true
+            flag.note(buffer)
         }
         engine.prepare()
         do {
@@ -178,9 +182,14 @@ final class WakeWordListener: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
             guard let self, self.sessionID == id else { return }
             self.audioReceived = flag.received
-            if !flag.received && self.preferBuiltIn {
+            self.silentMicrophone = flag.onlySilence
+            let broken = !flag.received || flag.onlySilence
+            if broken && self.preferBuiltIn && AudioInput.setting == "auto" {
+                // Microfone do Mac sem som: passa para o microfone padrão do sistema.
                 self.preferBuiltIn = false
                 self.restartAfterDelay(0.3)
+            } else if flag.onlySilence {
+                self.errorMessage = "O microfone escolhido só está entregando silêncio. Escolha outro em Ajustes › Comando de voz › Microfone."
             } else if !flag.received {
                 self.errorMessage = "O microfone não está entregando áudio. Confira a permissão de Microfone."
             }
@@ -289,7 +298,7 @@ final class WakeWordListener: ObservableObject {
         let base = CommandEngine.fold(word)
         guard !base.isEmpty else { return [] }
         var set: Set<String> = [base, base + "e", base + "s", "h" + base, base + "h"]
-        if base == "alt" { set.formUnion(["alti", "olt", "aut", "halt"]) }
+        if base == "alt" { set.formUnion(["alti", "olt", "aut", "halt", "alto", "auto", "out", "aldo"]) }
         return set
     }
 

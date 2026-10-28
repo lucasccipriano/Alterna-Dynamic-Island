@@ -12,7 +12,7 @@ enum IslandPage: Int, CaseIterable, Identifiable {
         switch self {
         case .music: "Música"
         case .notifications: "Notificações"
-        case .voice: "Comando"
+        case .voice: "Voz"
         case .profiles: "Alternar"
         case .bluetooth: "Bluetooth"
         case .sound: "Som"
@@ -23,7 +23,7 @@ enum IslandPage: Int, CaseIterable, Identifiable {
         switch self {
         case .music: "music.note"
         case .notifications: "bell.fill"
-        case .voice: "waveform"
+        case .voice: "mic.fill"
         case .profiles: "switch.2"
         case .bluetooth: "antenna.radiowaves.left.and.right"
         case .sound: "speaker.wave.2.fill"

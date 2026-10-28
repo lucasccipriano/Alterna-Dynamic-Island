@@ -31,6 +31,10 @@ final class AppSettings: ObservableObject {
     @Published var musicLiveActivity: Bool {
         didSet { save(musicLiveActivity, Keys.musicLive) }
     }
+    /// "auto", "default" ou o UID de um microfone.
+    @Published var voiceMicrophone: String {
+        didSet { save(voiceMicrophone, "voice.microphone"); WakeWordListener.shared.restartNow() }
+    }
     @Published var voiceLocale: String {
         didSet { save(voiceLocale, Keys.voiceLocale) }
     }
@@ -70,6 +74,7 @@ final class AppSettings: ObservableObject {
         wakeWordOnlyOnPower = defaults.bool(forKey: "voice.wakeOnlyOnPower")
         islandTheme = IslandTheme(rawValue: defaults.string(forKey: "island.theme") ?? "") ?? .normal
         voiceLocale = defaults.string(forKey: Keys.voiceLocale) ?? "pt-BR"
+        voiceMicrophone = defaults.string(forKey: "voice.microphone") ?? "auto"
         voiceShortcut = AppSettings.loadShortcut(Keys.voiceShortcut,
             default: Shortcut(keyCode: 9, modifiers: Shortcut.controlOptionCommand, display: "⌃⌥⌘V"))
         islandShortcut = AppSettings.loadShortcut(Keys.islandShortcut,

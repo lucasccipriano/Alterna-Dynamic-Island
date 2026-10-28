@@ -154,6 +154,14 @@ struct VoiceSettingsView: View {
                         Text(locale.name).tag(locale.id)
                     }
                 }
+                Picker("Microfone", selection: $settings.voiceMicrophone) {
+                    Text("Automático").tag("auto")
+                    Text("Padrão do sistema").tag("default")
+                    Divider()
+                    ForEach(AudioInput.inputDevices()) { device in
+                        Text(device.name).tag(device.uid)
+                    }
+                }
                 LabeledContent("Atalho para falar") {
                     ShortcutRecorder(shortcut: $settings.voiceShortcut)
                 }
@@ -166,7 +174,7 @@ struct VoiceSettingsView: View {
             } header: {
                 Text("Reconhecimento de fala")
             } footer: {
-                Text("Exemplos: \"abrir Safari\", \"abrir a pasta Downloads\", \"pesquisar contrato\", \"pesquisar na internet clima em Lisboa\", \"tocar Coldplay\", \"bateria\", \"armazenamento\", \"versão do macOS\".")
+                Text("Microfone automático: usa o microfone do Mac (assim os fones Bluetooth mantêm o som em alta qualidade). Com a tampa fechada ou se o microfone do Mac estiver mudo, usa o microfone padrão do sistema. Exemplos: \"abrir Safari\", \"abrir a pasta Downloads\", \"pesquisar contrato\", \"pesquisar na internet clima em Lisboa\", \"tocar Coldplay\", \"bateria\", \"armazenamento\", \"versão do macOS\".")
             }
 
             Section {
@@ -301,7 +309,9 @@ private struct VoiceDiagnostics: View {
             row("Permissão de microfone", micStatus)
             row("Idioma", settings.voiceLocale)
             row("Reconhecimento no próprio Mac", wake.onDevice ? "Sim" : "Não (usa a internet)")
-            row("Microfone em uso", wake.usingBuiltInMic ? "Microfone do Mac" : "Microfone padrão do sistema")
+            row("Microfone em uso", wake.microphoneName.isEmpty
+                ? (wake.usingBuiltInMic ? "Microfone do Mac" : "Microfone padrão do sistema") : wake.microphoneName)
+            row("Sinal do microfone", !wake.audioReceived ? "Sem áudio" : (wake.silentMicrophone ? "Só silêncio" : "Ok"))
             row("Áudio chegando", wake.audioReceived ? "Sim" : "Não")
             row("Última frase ouvida", wake.lastHeard.isEmpty ? "—" : "“\(wake.lastHeard)”")
             if let error = wake.lastRecognitionError {
