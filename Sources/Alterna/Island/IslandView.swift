@@ -448,6 +448,7 @@ private struct PreviewGlance: View {
     @ObservedObject private var store = ProfileStore.shared
     @ObservedObject private var notifications = NotificationMonitor.shared
     @ObservedObject private var bluetooth = BluetoothManager.shared
+    @ObservedObject private var mixer = SoundMixer.shared
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var wake = WakeWordListener.shared
 
@@ -459,6 +460,7 @@ private struct PreviewGlance: View {
             case .voice: voice
             case .profiles: profiles
             case .bluetooth: bluetoothGlance
+            case .sound: soundGlance
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -618,6 +620,34 @@ private struct PreviewGlance: View {
         .onAppear { bluetooth.refresh() }
     }
 
+    // Som
+    private var soundGlance: some View {
+        let playing = mixer.playingApps
+        let level = mixer.masterMuted ? 0 : mixer.masterVolume
+        return HStack(spacing: 12) {
+            badge(level < 0.001 ? "speaker.slash.fill" : "speaker.wave.2.fill", .pink)
+            titles(mixer.defaultOutput?.name ?? "Som",
+                   playing.isEmpty ? "Nenhum app tocando" : playing.map(\.name).prefix(3).joined(separator: ", "))
+            Spacer(minLength: 8)
+            Button {
+                mixer.setMasterMuted(!mixer.masterMuted)
+            } label: {
+                Image(systemName: mixer.masterMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 26, height: 26)
+                    .background(Circle().fill(Color.white.opacity(0.12)))
+            }
+            .buttonStyle(.plain)
+            .linkCursor()
+            .help(mixer.masterMuted ? "Ativar som" : "Silenciar")
+            IslandSlider(value: Binding(get: { Double(level) }, set: { mixer.setMasterVolume(Float($0)) }))
+                .frame(width: 110)
+                .disabled(!mixer.canChangeMaster)
+        }
+        .onAppear { mixer.refresh() }
+    }
+
     // Peças
     private func titles(_ title: String, _ subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -684,6 +714,7 @@ struct IslandCarousel: View {
         case .voice: VoicePage()
         case .profiles: ProfilesPage()
         case .bluetooth: BluetoothPage()
+        case .sound: SoundPage()
         }
     }
 }

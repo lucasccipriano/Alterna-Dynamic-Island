@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - Páginas do carrossel
 
 enum IslandPage: Int, CaseIterable, Identifiable {
-    case music, notifications, voice, profiles, bluetooth
+    case music, notifications, voice, profiles, bluetooth, sound
 
     var id: Int { rawValue }
 
@@ -15,6 +15,7 @@ enum IslandPage: Int, CaseIterable, Identifiable {
         case .voice: "Comando"
         case .profiles: "Alternar"
         case .bluetooth: "Bluetooth"
+        case .sound: "Som"
         }
     }
 
@@ -25,6 +26,7 @@ enum IslandPage: Int, CaseIterable, Identifiable {
         case .voice: "waveform"
         case .profiles: "switch.2"
         case .bluetooth: "antenna.radiowaves.left.and.right"
+        case .sound: "speaker.wave.2.fill"
         }
     }
 
@@ -36,6 +38,7 @@ enum IslandPage: Int, CaseIterable, Identifiable {
         case .voice: "comando"
         case .profiles: "alternar"
         case .bluetooth: "bluetooth"
+        case .sound: "som"
         }
     }
 }

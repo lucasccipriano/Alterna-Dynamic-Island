@@ -45,6 +45,8 @@
     <string>O Alterna usa o microfone para ouvir seus comandos de voz.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>O Alterna transforma sua fala em comandos, como abrir apps ou pesquisar.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>O Alterna captura o som de cada app para ajustar o volume, silenciar ou mandar para outra saída.</string>
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>O Alterna mostra, conecta e pareia seus dispositivos Bluetooth.</string>
     <key>NSHumanReadableCopyright</key>

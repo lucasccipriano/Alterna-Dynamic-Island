@@ -11,6 +11,7 @@ Num só lugar, no topo da tela:
 - **Comando de voz:** diga *"Alt, abrir navegador"*.
 - **Alternar:** troque teclado, rolagem e mouse entre trabalho e lazer com um atalho.
 - **Bluetooth:** ligue, conecte e pareie dispositivos.
+- **Som:** volume geral, saída de áudio e um mixer com volume, mudo e saída próprios para cada app.
 
 ![Os três estados da ilha: fechada, prévia e aberta](docs/images/estados.png)
 
@@ -30,6 +31,7 @@ Num só lugar, no topo da tela:
    - [Comando de voz ("Alt")](#-comando-de-voz-alt)
    - [Alternar (teclado, rolagem e mouse)](#-alternar-teclado-rolagem-e-mouse)
    - [Bluetooth](#-bluetooth)
+   - [Som (volume por app)](#-som-volume-por-app)
 6. [Aparência: Normal ou Liquid Glass](#aparência-normal-ou-liquid-glass)
 7. [Atalhos de teclado](#atalhos-de-teclado)
 8. [Configurações opcionais](#configurações-opcionais)
@@ -100,6 +102,7 @@ O macOS pede cada permissão na primeira vez que você usa a função correspond
 | **Acesso Total ao Disco** | Ler as notificações | Ajustes do Sistema › Privacidade e Segurança › Acesso Total ao Disco |
 | **Microfone** e **Reconhecimento de Fala** | Comando de voz | Pedido automático na primeira vez que você fala |
 | **Bluetooth** | Seção Bluetooth | Pedido automático ao abrir a seção |
+| **Gravação de áudio do sistema** | Volume por app (seção Som) | Pedido automático no primeiro ajuste. Fica em Privacidade e Segurança › Gravação de Tela e Áudio do Sistema |
 | **Acessibilidade** | Inverter só a roda do mouse | Ajustes do Sistema › Privacidade e Segurança › Acessibilidade |
 
 ## Como usar a ilha
@@ -233,6 +236,16 @@ A seção também tem controles rápidos para trocar o teclado, a rolagem natura
 - **Conectar e desconectar** dispositivos pareados com um clique.
 - **Parear um aparelho novo:** coloque o aparelho em modo de pareamento, clique em **+ Procurar** e depois em **Parear**.
 - A prévia mostra quais aparelhos estão conectados.
+
+### 🔊 Som (volume por app)
+
+**Como ativar:** abra a seção **Som**.
+
+- **Saída e volume geral:** escolha onde o Mac toca (alto-falantes, fones, AirPods, monitor) e ajuste ou silencie o volume geral.
+- **Mixer por app:** todo app que estiver tocando som aparece na lista, cada um com seu volume, botão de mudo e saída própria. Por exemplo, a música nos fones e a chamada nos alto-falantes.
+- **Fica salvo:** o Alterna lembra o ajuste de cada app e aplica sozinho sempre que o app tocar de novo. Para desfazer, use a seta ↺ do app ou **Restaurar tudo**.
+- Os ajustes salvos ficam em **Ajustes › Som**.
+- Precisa do **macOS 14.2** ou mais novo. Na primeira vez, o macOS pede a permissão **Gravação de áudio do sistema**: ela é usada só para ajustar o som, nada é gravado.
 
 ---
 

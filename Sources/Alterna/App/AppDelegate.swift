@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         IslandController.shared.start()
         SpotifyController.shared.start()
         NotificationMonitor.shared.start()
+        SoundMixer.shared.start()
         WakeWordListener.shared.applySettings()
     }
 

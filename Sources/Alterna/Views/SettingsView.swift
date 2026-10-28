@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum SidebarItem: Hashable {
-    case general, music, notifications, voice
+    case general, music, notifications, voice, sound
     case profile(UUID)
 }
 
@@ -19,6 +19,7 @@ struct SettingsView: View {
                     Label("Música", systemImage: "music.note").tag(SidebarItem.music)
                     Label("Notificações", systemImage: "bell.badge").tag(SidebarItem.notifications)
                     Label("Comando de voz", systemImage: "waveform").tag(SidebarItem.voice)
+                    Label("Som", systemImage: "speaker.wave.2").tag(SidebarItem.sound)
                 }
 
                 Section(store.profilesEnabled ? "Perfis" : "Perfis (desligados)") {
@@ -48,6 +49,7 @@ struct SettingsView: View {
         case "music": selection = .music
         case "notifications": selection = .notifications
         case "voice": selection = .voice
+        case "sound": selection = .sound
         case "general": selection = .general
         default: return
         }
@@ -66,6 +68,7 @@ struct SettingsView: View {
         case .music: MusicSettingsView()
         case .notifications: NotificationSettingsView()
         case .voice: VoiceSettingsView()
+        case .sound: SoundSettingsView()
         default: GeneralSettingsView()
         }
     }
