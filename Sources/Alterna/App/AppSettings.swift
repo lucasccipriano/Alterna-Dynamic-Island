@@ -7,7 +7,7 @@ import SwiftUI
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    /// Funcionalidades ligadas. Por padrão só Música e Notificações.
+    /// Funcionalidades ligadas. Por padrão: Música, Notificações e Som.
     @Published private(set) var enabledFeatures: Set<Feature>
 
     func isEnabled(_ feature: Feature) -> Bool {
@@ -177,7 +177,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
     var defaultsKey: String { "feature.\(rawValue)" }
-    var onByDefault: Bool { self == .music || self == .notifications }
+    var onByDefault: Bool { self == .music || self == .notifications || self == .sound }
 
     init(page: IslandPage) {
         switch page {

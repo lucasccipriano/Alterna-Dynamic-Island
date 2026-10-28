@@ -13,7 +13,7 @@ Num só lugar, no topo da tela:
 - **Bluetooth:** ligue, conecte e pareie dispositivos.
 - **Som:** volume geral, saída de áudio e um mixer com volume, mudo e saída próprios para cada app.
 
-Cada funcionalidade pode ser **ligada ou desligada**. Por padrão vêm ligadas só **Música** e **Notificações** (veja [Ligar e desligar funcionalidades](#ligar-e-desligar-funcionalidades)).
+Cada funcionalidade pode ser **ligada ou desligada**. Por padrão vêm ligadas **Música**, **Notificações** e **Som** (veja [Ligar e desligar funcionalidades](#ligar-e-desligar-funcionalidades)).
 
 ![Os três estados da ilha: fechada, prévia e aberta](docs/images/estados.png)
 
@@ -138,7 +138,7 @@ Em **Ajustes › Geral › Funcionalidades**, cada funcionalidade tem um switch:
 | 🎙️ Voz | Desligada |
 | 🔀 Perfis de teclado (Alternar) | Desligados |
 | 📶 Bluetooth | Desligado |
-| 🔊 Som | Desligado |
+| 🔊 Som | Ligado |
 
 - Desligada, a funcionalidade **não roda em segundo plano**: a Voz não abre o microfone, o Som não mexe no áudio, o Bluetooth não é consultado, e os atalhos dela ficam livres.
 - A seção dela continua no seletor e na prévia, mas mostra um **aviso com um switch para ligar** ali mesmo, sem abrir os Ajustes.
