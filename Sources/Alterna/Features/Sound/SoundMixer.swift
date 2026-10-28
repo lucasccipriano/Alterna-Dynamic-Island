@@ -73,6 +73,13 @@ final class SoundMixer: ObservableObject {
         }
     }
 
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+        taps = [:]
+        apps = []
+    }
+
     // MARK: - Leitura
 
     func refresh() {
@@ -87,7 +94,7 @@ final class SoundMixer: ObservableObject {
         let canChange = AudioOutputs.canChangeVolume(currentDefault)
         if canChange != canChangeMaster { canChangeMaster = canChange }
 
-        guard #available(macOS 14.2, *) else { return }
+        guard #available(macOS 14.2, *), timer != nil else { return }
         let found = readApps()
         if found != apps { apps = found }
         applyRules()

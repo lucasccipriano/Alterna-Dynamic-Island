@@ -12,6 +12,7 @@ struct MusicSettingsView: View {
 
     var body: some View {
         Form {
+            FeatureSection(feature: .music)
             Section {
                 LabeledContent("App do Spotify") {
                     Text(spotify.isRunning ? "Aberto" : "Fechado")
@@ -82,6 +83,7 @@ struct NotificationSettingsView: View {
 
     var body: some View {
         Form {
+            FeatureSection(feature: .notifications)
             Section {
                 PermissionRow(title: "Acesso Total ao Disco",
                               detail: "Necessário para ler a Central de Notificações.",
@@ -148,6 +150,7 @@ struct VoiceSettingsView: View {
 
     var body: some View {
         Form {
+            FeatureSection(feature: .voice)
             Section {
                 Picker("Idioma", selection: $settings.voiceLocale) {
                     ForEach(AppSettings.voiceLocales, id: \.id) { locale in

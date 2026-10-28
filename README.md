@@ -13,6 +13,8 @@ Num só lugar, no topo da tela:
 - **Bluetooth:** ligue, conecte e pareie dispositivos.
 - **Som:** volume geral, saída de áudio e um mixer com volume, mudo e saída próprios para cada app.
 
+Cada funcionalidade pode ser **ligada ou desligada**. Por padrão vêm ligadas só **Música** e **Notificações** (veja [Ligar e desligar funcionalidades](#ligar-e-desligar-funcionalidades)).
+
 ![Os três estados da ilha: fechada, prévia e aberta](docs/images/estados.png)
 
 > As imagens deste README são ilustrações da interface. A aparência real pode variar um pouco.
@@ -25,6 +27,7 @@ Num só lugar, no topo da tela:
 2. [Instalação](#instalação)
 3. [Primeiro uso e permissões](#primeiro-uso-e-permissões)
 4. [Como usar a ilha](#como-usar-a-ilha)
+   - [Ligar e desligar funcionalidades](#ligar-e-desligar-funcionalidades)
 5. [Funcionalidades](#funcionalidades)
    - [Música (Spotify)](#-música-spotify)
    - [Notificações](#-notificações)
@@ -123,6 +126,23 @@ Para trocar de seção com a ilha aberta:
 - **deslize dois dedos** no trackpad;
 - gire a **roda lateral do mouse** (ou use **Shift + roda**);
 - use as **setas ← →** do teclado.
+
+### Ligar e desligar funcionalidades
+
+Em **Ajustes › Geral › Funcionalidades**, cada funcionalidade tem um switch:
+
+| Funcionalidade | Padrão |
+| --- | --- |
+| 🎵 Música | Ligada |
+| 🔔 Notificações | Ligadas |
+| 🎙️ Voz | Desligada |
+| 🔀 Perfis de teclado (Alternar) | Desligados |
+| 📶 Bluetooth | Desligado |
+| 🔊 Som | Desligado |
+
+- Desligada, a funcionalidade **não roda em segundo plano**: a Voz não abre o microfone, o Som não mexe no áudio, o Bluetooth não é consultado, e os atalhos dela ficam livres.
+- A seção dela continua no seletor e na prévia, mas mostra um **aviso com um switch para ligar** ali mesmo, sem abrir os Ajustes.
+- Os painéis de Ajustes de cada funcionalidade (Música, Notificações, Comando de voz, Som) também têm o switch no topo.
 
 A **⚙︎ engrenagem** na ponta direita abre os **Ajustes**. Com o botão direito, ela mostra a opção **Sair**. Para sair da ilha, tire o mouse, clique fora dela ou aperte **Esc**.
 
@@ -231,15 +251,17 @@ Cada perfil pode mudar:
 - **Roda do mouse invertida.** Inverte só o mouse e deixa o trackpad como está.
 - **Velocidade do cursor** do mouse e do trackpad.
 
-Para criar e editar perfis:
+**Criar um perfil novo:**
 
-1. Abra **Ajustes** e escolha o perfil na barra lateral (ou crie um novo com **+**).
-2. Defina o atalho e os ajustes que quiser mudar. O que ficar em **"Não alterar"** não é mexido.
-3. Dica: configure o Mac do jeito que quer e clique em **"Copiar ajustes atuais do Mac"**.
+1. Deixe o Mac do jeito que quer (teclado, rolagem, velocidade do mouse).
+2. Na seção **Alternar** da ilha, clique no cartão **+ Novo perfil**. O perfil é criado com os ajustes atuais do Mac ("Perfil 1", "Perfil 2"…) e os **Ajustes** abrem direto nele.
+3. Dê um nome, escolha um ícone e um atalho. O que ficar em **"Não alterar"** não é mexido.
+
+Também dá para criar com o **+** na barra lateral dos Ajustes, editar qualquer perfil por lá e usar **"Copiar ajustes atuais do Mac"** para atualizar um perfil existente.
 
 A seção também tem controles rápidos para trocar o teclado, a rolagem natural e a inversão do mouse sem precisar de perfil.
 
-**Ligar e desligar:** em **Ajustes › Geral › Alternar**, o switch **Perfis de teclado** desliga toda a função. Desligada, os atalhos dos perfis ficam livres para outros apps e a seção Alternar da ilha (e a prévia) mostra um aviso com um switch para ligar de novo.
+**Ligar e desligar:** vem **desligado**. Ligue em **Ajustes › Geral › Funcionalidades** (ou em Ajustes › Geral › Alternar), ou pelo switch da própria seção na ilha. Desligada, os atalhos dos perfis ficam livres para outros apps e a seção Alternar da ilha (e a prévia) mostra um aviso com um switch para ligar de novo.
 
 ### 📶 Bluetooth
 

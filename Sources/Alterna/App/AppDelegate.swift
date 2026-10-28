@@ -14,10 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         _ = ProfileStore.shared
         AppSettings.shared.registerHotKeys()
         IslandController.shared.start()
-        SpotifyController.shared.start()
-        NotificationMonitor.shared.start()
-        SoundMixer.shared.start()
-        WakeWordListener.shared.applySettings()
+        // Só liga o que estiver ativado em Ajustes › Geral › Funcionalidades.
+        for feature in Feature.allCases { AppSettings.shared.apply(feature) }
     }
 
     /// Abrir o app de novo (Aplicativos, Spotlight, Launchpad) mostra os Ajustes.

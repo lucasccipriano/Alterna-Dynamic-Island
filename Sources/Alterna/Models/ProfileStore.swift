@@ -50,7 +50,7 @@ final class ProfileStore: ObservableObject {
         static let active = "activeProfile"
         static let cycle = "cycleShortcut"
         static let hud = "showHUD"
-        static let enabled = "profiles.enabled"
+        static let enabled = "feature.profiles"
         static let reverse = "reverseMouseWheel"
     }
 
@@ -74,7 +74,7 @@ final class ProfileStore: ObservableObject {
 
         activeProfileID = defaults.string(forKey: Keys.active).flatMap { UUID(uuidString: $0) }
         showHUD = defaults.object(forKey: Keys.hud) as? Bool ?? true
-        profilesEnabled = defaults.object(forKey: Keys.enabled) as? Bool ?? true
+        profilesEnabled = defaults.object(forKey: Keys.enabled) as? Bool ?? false
         reverseMouseWheel = defaults.bool(forKey: Keys.reverse)
 
         refreshStatus()

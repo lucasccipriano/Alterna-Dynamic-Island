@@ -348,3 +348,93 @@ private struct LinkCursor: ViewModifier {
         }
     }
 }
+
+// MARK: - Funcionalidade desligada
+
+/// Mostra o conteúdo quando a funcionalidade está ligada; senão, um aviso com um switch para ligar.
+struct FeatureGate<Content: View>: View {
+    let feature: Feature
+    var compact = false
+    @ViewBuilder var content: () -> Content
+    @ObservedObject private var settings = AppSettings.shared
+    @ObservedObject private var profiles = ProfileStore.shared
+
+    var body: some View {
+        if settings.isEnabled(feature) {
+            content()
+        } else if compact {
+            FeatureOffGlance(feature: feature)
+        } else {
+            FeatureOffView(feature: feature)
+        }
+    }
+}
+
+private func featureSwitch(_ feature: Feature) -> some View {
+    Toggle("", isOn: Binding(get: { AppSettings.shared.isEnabled(feature) },
+                             set: { on in withAnimation(.island) { AppSettings.shared.setEnabled(feature, on) } }))
+        .toggleStyle(.switch)
+        .labelsHidden()
+        .linkCursor()
+        .help("Ligar \(feature.title)")
+}
+
+/// Página inteira de uma funcionalidade desligada.
+struct FeatureOffView: View {
+    let feature: Feature
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: feature.symbol)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(IslandStyle.secondary)
+                .frame(width: 48, height: 48)
+                .background(Circle().fill(IslandStyle.card))
+            Text(feature.offTitle)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+            Text(feature.summary)
+                .font(.system(size: 12))
+                .foregroundStyle(IslandStyle.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 380)
+            HStack(spacing: 8) {
+                Text("Ligar \(feature.title.lowercased())")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white)
+                featureSwitch(feature).controlSize(.small)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 5)
+            .background(Capsule().fill(IslandStyle.card))
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Prévia de uma funcionalidade desligada.
+struct FeatureOffGlance: View {
+    let feature: Feature
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: feature.symbol)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(Color.white.opacity(0.15)))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(feature.offTitle)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text("Ligue para usar na ilha")
+                    .font(.system(size: 11))
+                    .foregroundStyle(IslandStyle.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            featureSwitch(feature).controlSize(.small)
+        }
+    }
+}

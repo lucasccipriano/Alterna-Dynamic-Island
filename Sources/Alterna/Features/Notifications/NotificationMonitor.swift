@@ -165,6 +165,11 @@ final class NotificationMonitor: ObservableObject {
 
     // MARK: - Leitura periódica
 
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+    }
+
     func start() {
         guard timer == nil else { return }
         poll()

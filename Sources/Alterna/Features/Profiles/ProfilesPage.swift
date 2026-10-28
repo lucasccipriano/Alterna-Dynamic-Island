@@ -6,12 +6,10 @@ struct ProfilesPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if !store.profilesEnabled {
-                ProfilesDisabledView()
-            } else if store.profiles.isEmpty {
+            if store.profiles.isEmpty {
                 IslandEmptyState(symbol: "switch.2", title: "Nenhum perfil",
-                                 message: "Crie perfis de trabalho e lazer nos Ajustes.",
-                                 buttonTitle: "Criar perfil") { SettingsOpener.open() }
+                                 message: "Crie perfis como Trabalho e Lazer. O perfil novo começa com os ajustes atuais do Mac.",
+                                 buttonTitle: "Criar perfil") { NewProfileCard.create() }
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
@@ -20,9 +18,10 @@ struct ProfilesPage: View {
                                 store.apply(profile)
                             }
                         }
+                        NewProfileCard()
                     }
                 }
-                .scrollDisabled(store.profiles.count <= 4)
+                .scrollDisabled(store.profiles.count <= 3)
 
                 QuickControls()
             }
@@ -172,5 +171,62 @@ struct ProfilesDisabledView: View {
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Cartão "+ Novo perfil": cria um perfil com os ajustes atuais do Mac
+/// e abre o editor nos Ajustes para dar nome, ícone e atalho.
+struct NewProfileCard: View {
+    @State private var hovering = false
+
+    @MainActor
+    static func create() {
+        let store = ProfileStore.shared
+        var profile = store.addProfile()
+        profile.name = nextName(store.profiles.map(\.name))
+        if let index = store.profiles.firstIndex(where: { $0.id == profile.id }) {
+            store.profiles[index] = profile
+        }
+        IslandController.shared.collapse()
+        SettingsWindowController.shared.show(pane: "profile:\(profile.id.uuidString)")
+    }
+
+    private static func nextName(_ existing: [String]) -> String {
+        var n = 1
+        while existing.contains("Perfil \(n)") { n += 1 }
+        return "Perfil \(n)"
+    }
+
+    var body: some View {
+        Button {
+            Self.create()
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: "plus")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color.white.opacity(hovering ? 0.2 : 0.12)))
+                Text("Novo perfil")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                Text("Com os ajustes atuais do Mac")
+                    .font(.system(size: 10))
+                    .foregroundStyle(IslandStyle.tertiary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
+            .padding(12)
+            .frame(width: 112, height: 128)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.white.opacity(hovering ? 0.35 : 0.18), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .linkCursor()
+        .help("Criar um perfil novo")
     }
 }

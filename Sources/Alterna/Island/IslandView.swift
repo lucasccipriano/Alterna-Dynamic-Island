@@ -453,6 +453,11 @@ private struct PreviewGlance: View {
     @ObservedObject private var wake = WakeWordListener.shared
 
     var body: some View {
+        FeatureGate(feature: Feature(page: page), compact: true) { glance }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder private var glance: some View {
         Group {
             switch page {
             case .music: music
@@ -708,6 +713,11 @@ struct IslandCarousel: View {
 
     @ViewBuilder
     private func page(_ page: IslandPage) -> some View {
+        FeatureGate(feature: Feature(page: page)) { pageContent(page) }
+    }
+
+    @ViewBuilder
+    private func pageContent(_ page: IslandPage) -> some View {
         switch page {
         case .music: MusicPage()
         case .notifications: NotificationsPage()

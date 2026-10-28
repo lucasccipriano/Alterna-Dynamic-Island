@@ -1,10 +1,47 @@
 import AppKit
 import Combine
+import SwiftUI
 
 /// Preferências gerais do app (a ilha, atalhos do app e voz).
 @MainActor
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
+
+    /// Funcionalidades ligadas. Por padrão só Música e Notificações.
+    @Published private(set) var enabledFeatures: Set<Feature>
+
+    func isEnabled(_ feature: Feature) -> Bool {
+        feature == .profiles ? ProfileStore.shared.profilesEnabled : enabledFeatures.contains(feature)
+    }
+
+    func setEnabled(_ feature: Feature, _ on: Bool) {
+        if feature == .profiles {
+            ProfileStore.shared.profilesEnabled = on
+        }
+        if on { enabledFeatures.insert(feature) } else { enabledFeatures.remove(feature) }
+        defaults.set(on, forKey: feature.defaultsKey)
+        apply(feature)
+    }
+
+    func binding(_ feature: Feature) -> Binding<Bool> {
+        Binding(get: { self.isEnabled(feature) }, set: { self.setEnabled(feature, $0) })
+    }
+
+    /// Liga ou desliga o serviço por trás da funcionalidade.
+    func apply(_ feature: Feature) {
+        let on = isEnabled(feature)
+        switch feature {
+        case .music: on ? SpotifyController.shared.start() : SpotifyController.shared.stop()
+        case .notifications: on ? NotificationMonitor.shared.start() : NotificationMonitor.shared.stop()
+        case .voice:
+            WakeWordListener.shared.applySettings()
+            registerHotKeys()
+            if !on { VoiceController.shared.cancel() }
+        case .profiles: break
+        case .bluetooth: if on { BluetoothManager.shared.activate() }
+        case .sound: on ? SoundMixer.shared.start() : SoundMixer.shared.stop()
+        }
+    }
 
     @Published var showIsland: Bool {
         didSet { save(showIsland, Keys.showIsland); IslandController.shared.setVisible(showIsland) }
@@ -65,6 +102,9 @@ final class AppSettings: ObservableObject {
 
     private init() {
         let defaults = UserDefaults.standard
+        enabledFeatures = Set(Feature.allCases.filter { feature in
+            defaults.object(forKey: feature.defaultsKey) as? Bool ?? feature.onByDefault
+        })
         showIsland = defaults.object(forKey: Keys.showIsland) as? Bool ?? true
         expandOnHover = defaults.object(forKey: Keys.expandOnHover) as? Bool ?? true
         musicLiveActivity = defaults.object(forKey: Keys.musicLive) as? Bool ?? true
@@ -83,7 +123,7 @@ final class AppSettings: ObservableObject {
 
     func registerHotKeys() {
         var bindings: [(Shortcut, () -> Void)] = []
-        if let voiceShortcut {
+        if let voiceShortcut, enabledFeatures.contains(.voice) {
             bindings.append((voiceShortcut, { IslandController.shared.startVoice() }))
         }
         if let islandShortcut {
@@ -127,6 +167,83 @@ enum IslandTheme: String, CaseIterable, Identifiable {
         switch self {
         case .normal: "Normal"
         case .glass: "Liquid Glass"
+        }
+    }
+}
+
+/// Funcionalidades da ilha que podem ser ligadas e desligadas.
+enum Feature: String, CaseIterable, Identifiable {
+    case music, notifications, voice, profiles, bluetooth, sound
+
+    var id: String { rawValue }
+    var defaultsKey: String { "feature.\(rawValue)" }
+    var onByDefault: Bool { self == .music || self == .notifications }
+
+    init(page: IslandPage) {
+        switch page {
+        case .music: self = .music
+        case .notifications: self = .notifications
+        case .voice: self = .voice
+        case .profiles: self = .profiles
+        case .bluetooth: self = .bluetooth
+        case .sound: self = .sound
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .music: "Música"
+        case .notifications: "Notificações"
+        case .voice: "Voz"
+        case .profiles: "Perfis de teclado"
+        case .bluetooth: "Bluetooth"
+        case .sound: "Som"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .music: "music.note"
+        case .notifications: "bell.fill"
+        case .voice: "mic.fill"
+        case .profiles: "switch.2"
+        case .bluetooth: "antenna.radiowaves.left.and.right"
+        case .sound: "speaker.wave.2.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .music: .green
+        case .notifications: .red
+        case .voice: .purple
+        case .profiles: .blue
+        case .bluetooth: .blue
+        case .sound: .pink
+        }
+    }
+
+    /// "Música desligada", "Som desligado"…
+    var offTitle: String {
+        switch self {
+        case .music: "Música desligada"
+        case .notifications: "Notificações desligadas"
+        case .voice: "Voz desligada"
+        case .profiles: "Perfis de teclado desligados"
+        case .bluetooth: "Bluetooth desligado"
+        case .sound: "Som desligado"
+        }
+    }
+
+    /// O que a funcionalidade faz (usado no aviso de desligada e nos Ajustes).
+    var summary: String {
+        switch self {
+        case .music: "Controle o Spotify, veja playlists e busque músicas e podcasts."
+        case .notifications: "Veja as notificações do Mac na ilha, com filtros por app e por tipo."
+        case .voice: "Diga “Alt” e um comando para abrir apps, pastas, pesquisar e tocar música."
+        case .profiles: "Troque idioma do teclado, rolagem e velocidade do mouse com um clique ou atalho."
+        case .bluetooth: "Ligue o Bluetooth, conecte e pareie fones, teclados e mouses."
+        case .sound: "Saída de áudio, volume geral e volume, mudo e saída de cada app."
         }
     }
 }

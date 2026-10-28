@@ -6,6 +6,7 @@ struct SoundSettingsView: View {
 
     var body: some View {
         Form {
+            FeatureSection(feature: .sound)
             Section {
                 Picker("Saída", selection: Binding(
                     get: { mixer.defaultOutput?.uid ?? "" },

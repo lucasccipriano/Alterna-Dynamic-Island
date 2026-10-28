@@ -199,7 +199,7 @@ final class IslandModel: ObservableObject {
     // MARK: Tamanho
 
     var showsMusicActivity: Bool {
-        AppSettings.shared.musicLiveActivity && SpotifyController.shared.isPlaying
+        AppSettings.shared.musicLiveActivity && AppSettings.shared.isEnabled(.music) && SpotifyController.shared.isPlaying
     }
 
     var showsVoiceActivity: Bool {

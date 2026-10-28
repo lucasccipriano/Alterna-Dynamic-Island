@@ -62,7 +62,7 @@ final class WakeWordListener: ObservableObject {
         powerTimer?.invalidate()
         powerTimer = nil
 
-        guard settings.wakeWordEnabled else {
+        guard settings.wakeWordEnabled, settings.isEnabled(.voice) else {
             stopSession()
             state = .off
             return
@@ -115,7 +115,7 @@ final class WakeWordListener: ObservableObject {
 
     private func checkPower() {
         let settings = AppSettings.shared
-        let shouldRun = settings.wakeWordEnabled && !suspended && !(settings.wakeWordOnlyOnPower && Self.isOnBattery)
+        let shouldRun = settings.wakeWordEnabled && settings.isEnabled(.voice) && !suspended && !(settings.wakeWordOnlyOnPower && Self.isOnBattery)
         if shouldRun && state == .paused { applySettings() }
         if !shouldRun && isActive && state == .waiting { stopSession(); state = .paused }
     }

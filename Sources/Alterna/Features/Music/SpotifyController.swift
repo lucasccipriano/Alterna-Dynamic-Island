@@ -36,7 +36,27 @@ final class SpotifyController: ObservableObject {
 
     private init() {}
 
+    private var active = false
+    private var observing = false
+
+    func stop() {
+        active = false
+        timer?.invalidate()
+        timer = nil
+        if isPlaying { isPlaying = false }
+    }
+
     func start() {
+        guard timer == nil else { return }
+        active = true
+        defer {
+            timer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+                Task { @MainActor in self?.refresh() }
+            }
+            refresh()
+        }
+        guard !observing else { return }
+        observing = true
         // O Spotify avisa quando a faixa ou o estado mudam.
         DistributedNotificationCenter.default().addObserver(
             forName: Notification.Name("com.spotify.client.PlaybackStateChanged"),
@@ -51,10 +71,6 @@ final class SpotifyController: ObservableObject {
             }
         }
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refresh() }
-        }
-        refresh()
     }
 
     /// Posição estimada agora (entre uma leitura e outra).
@@ -67,6 +83,7 @@ final class SpotifyController: ObservableObject {
     // MARK: - Leitura
 
     func refresh() {
+        guard active else { return }
         let running = !NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleID).isEmpty
         if running != isRunning { isRunning = running }
         guard running else {

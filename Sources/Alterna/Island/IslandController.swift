@@ -219,12 +219,14 @@ final class IslandController {
 
     func startVoice() {
         expand(to: .voice)
+        guard AppSettings.shared.isEnabled(.voice) else { return }
         model.keepOpen = true
         VoiceController.shared.startListening()
     }
 
     func runCommand(_ text: String) {
         expand(to: .voice)
+        guard AppSettings.shared.isEnabled(.voice) else { return }
         model.keepOpen = true
         VoiceController.shared.run(text)
     }

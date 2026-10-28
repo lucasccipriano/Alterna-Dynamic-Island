@@ -51,6 +51,9 @@ struct SettingsView: View {
         case "voice": selection = .voice
         case "sound": selection = .sound
         case "general": selection = .general
+        case let pane? where pane.hasPrefix("profile:"):
+            guard let id = UUID(uuidString: String(pane.dropFirst("profile:".count))) else { return }
+            selection = .profile(id)
         default: return
         }
         router.requestedPane = nil
@@ -129,6 +132,16 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
+                ForEach(Feature.allCases) { feature in
+                    FeatureToggleRow(feature: feature)
+                }
+            } header: {
+                Text("Funcionalidades")
+            } footer: {
+                Text("Escolha o que aparece funcionando na ilha. Desligada, a funcionalidade não roda em segundo plano (microfone, Bluetooth, áudio…) e a seção dela mostra um aviso com um switch para ligar.")
+            }
+
+            Section {
                 Picker("Tema", selection: $settings.islandTheme) {
                     ForEach(IslandTheme.allCases) { theme in
                         Text(theme.title).tag(theme)
@@ -156,7 +169,7 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Toggle("Perfis de teclado", isOn: $store.profilesEnabled)
+                Toggle("Perfis de teclado", isOn: settings.binding(.profiles))
                 if store.profilesEnabled {
                     Toggle("Mostrar aviso ao trocar de perfil", isOn: $store.showHUD)
                     LabeledContent("Ir para o próximo perfil") {
@@ -295,5 +308,42 @@ struct ThemePreview: View {
             Spacer()
         }
         .padding(.vertical, 4)
+    }
+}
+
+/// Linha com ícone, nome, descrição e o switch de uma funcionalidade.
+struct FeatureToggleRow: View {
+    let feature: Feature
+    @ObservedObject private var settings = AppSettings.shared
+    @ObservedObject private var profiles = ProfileStore.shared
+
+    var body: some View {
+        Toggle(isOn: settings.binding(feature)) {
+            HStack(spacing: 10) {
+                Image(systemName: feature.symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 24, height: 24)
+                    .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(feature.color.gradient))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(feature.title)
+                    Text(feature.summary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+    }
+}
+
+/// Seção no topo de um painel de Ajustes para ligar a funcionalidade.
+struct FeatureSection: View {
+    let feature: Feature
+
+    var body: some View {
+        Section {
+            FeatureToggleRow(feature: feature)
+        }
     }
 }
