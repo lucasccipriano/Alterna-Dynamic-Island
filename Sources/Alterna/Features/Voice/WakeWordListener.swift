@@ -2,6 +2,9 @@ import AVFoundation
 import AppKit
 import IOKit.ps
 import Speech
+import os
+
+let voiceLog = Logger(subsystem: "app.alterna", category: "voz")
 
 /// Fica ouvindo a palavra de ativação ("Alt") e executa o comando dito em seguida:
 ///   "Alt, abrir navegador"   "Alt… pesquisar contrato"   "Alt, bateria"
@@ -261,6 +264,7 @@ final class WakeWordListener: ObservableObject {
     // MARK: - Palavra de ativação e comando
 
     private func handle(text: String, isFinal: Bool, failed: Bool) {
+        voiceLog.notice("ouviu [\(String(describing: self.state), privacy: .public)] final=\(isFinal) erro=\(failed): \(text, privacy: .public)")
         let words = text.split(whereSeparator: \.isWhitespace).map(String.init)
         let folded = words.map(CommandEngine.fold)
 
@@ -270,9 +274,20 @@ final class WakeWordListener: ObservableObject {
             IslandController.shared.showListeningPreview()
             command = words[(index + 1)...].joined(separator: " ")
             restartSilence(after: command.isEmpty ? 5 : 1.4)
-        } else if state == .capturing, let index = wakeIndex(in: folded) {
-            let newCommand = words[(index + 1)...].joined(separator: " ")
-            if newCommand != command {
+        } else if state == .capturing {
+            // Depois de uma pausa o reconhecimento recomeça a frase sem o "Alt"
+            // (ex.: "Alt" … "Abrir calculadora"): aí o texto inteiro é o comando.
+            let newCommand: String
+            if let index = wakeIndex(in: folded) {
+                newCommand = words[(index + 1)...].joined(separator: " ")
+            } else if command.isEmpty, folded.count == 1,
+                      ["al", "au", "ou", "ha", "ol"].contains(where: { folded[0].hasPrefix($0) }) {
+                // Ainda é o reconhecimento revisando a própria palavra "Alt" (ex.: "Alta").
+                newCommand = ""
+            } else {
+                newCommand = words.joined(separator: " ")
+            }
+            if !newCommand.isEmpty, newCommand != command {
                 command = newCommand
                 restartSilence(after: 1.4)
             }
@@ -315,6 +330,7 @@ final class WakeWordListener: ObservableObject {
         stopSession()
 
         guard !text.isEmpty else {
+            voiceLog.notice("captura terminou sem comando")
             // Disse só "Alt" e não falou mais nada.
             command = ""
             IslandController.shared.endListeningPreview(result: nil)
@@ -323,7 +339,9 @@ final class WakeWordListener: ObservableObject {
         }
 
         state = .running
+        voiceLog.notice("executando comando: \(text, privacy: .public)")
         VoiceController.shared.run(text) { [weak self] result in
+            voiceLog.notice("resultado: \(String(describing: result), privacy: .public)")
             IslandController.shared.endListeningPreview(result: result)
             self?.command = ""
             self?.restartAfterDelay(0.8)
