@@ -29,6 +29,16 @@ enum AudioInput {
         return format.sampleRate > 0 && format.channelCount > 0
     }
 
+    /// Formato para o tap do microfone. Depois de trocar o aparelho para o microfone embutido,
+    /// o AVAudioEngine ainda guarda a taxa do microfone padrão (ex.: AirPods a 48 kHz e o embutido
+    /// a 44,1 kHz). Com `format: nil` o engine falha ao iniciar (erro -10868). Usar o formato real
+    /// do hardware evita isso.
+    static func tapFormat(_ engine: AVAudioEngine) -> AVAudioFormat? {
+        let hardware = engine.inputNode.inputFormat(forBus: 0)
+        guard hardware.sampleRate > 0, hardware.channelCount > 0 else { return nil }
+        return hardware
+    }
+
     static func builtInMicrophone() -> AudioDeviceID? {
         var address = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDevices,
                                                  mScope: kAudioObjectPropertyScopeGlobal,

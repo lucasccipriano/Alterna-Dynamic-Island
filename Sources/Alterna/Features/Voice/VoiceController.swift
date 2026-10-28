@@ -85,7 +85,7 @@ final class VoiceController: ObservableObject {
         }
         input.removeTap(onBus: 0)
         let flag = AudioFlag()
-        input.installTap(onBus: 0, bufferSize: 1024, format: nil) { [weak request] buffer, _ in
+        input.installTap(onBus: 0, bufferSize: 1024, format: AudioInput.tapFormat(engine)) { [weak request] buffer, _ in
             request?.append(buffer)
             flag.received = true
             let level = Self.rms(buffer)
@@ -98,9 +98,15 @@ final class VoiceController: ObservableObject {
         do {
             try engine.start()
         } catch {
+            input.removeTap(onBus: 0)
+            // O microfone embutido falhou: tenta o microfone padrão do sistema.
+            if preferBuiltIn {
+                preferBuiltIn = false
+                beginSession()
+                return
+            }
             errorMessage = "Não consegui usar o microfone: \(error.localizedDescription)"
             WakeWordListener.shared.resumeSoon()
-            input.removeTap(onBus: 0)
             return
         }
 

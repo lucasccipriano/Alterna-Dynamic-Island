@@ -143,9 +143,9 @@ final class WakeWordListener: ObservableObject {
         }
         let input = engine.inputNode
         input.removeTap(onBus: 0)
-        // Formato nil: usa o formato atual do microfone (evita falha ao trocar de aparelho).
+        // Usa o formato real do microfone escolhido (ver AudioInput.tapFormat).
         let flag = AudioFlag()
-        input.installTap(onBus: 0, bufferSize: 1024, format: nil) { [weak request] buffer, _ in
+        input.installTap(onBus: 0, bufferSize: 1024, format: AudioInput.tapFormat(engine)) { [weak request] buffer, _ in
             request?.append(buffer)
             flag.received = true
         }
@@ -154,6 +154,12 @@ final class WakeWordListener: ObservableObject {
             try engine.start()
         } catch {
             input.removeTap(onBus: 0)
+            // O microfone embutido falhou: tenta o microfone padrão do sistema antes de desistir.
+            if preferBuiltIn {
+                preferBuiltIn = false
+                restartAfterDelay(0.3)
+                return
+            }
             errorMessage = "Não consegui usar o microfone: \(error.localizedDescription)"
             state = .paused
             return
